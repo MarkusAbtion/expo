@@ -48,6 +48,7 @@ const withAndroidWidgetFiles = (config, widgets) => {
             }
             const projectRoot = config.modRequest.platformProjectRoot;
             const packageDirectory = path.join(projectRoot, 'app/src/main/java', ...androidPackage.split('.'));
+            const layoutRegistryConfigPath = path.join(projectRoot, 'app/src/main/expo-widgets-layout-registry.config.json');
             const xmlDirectory = path.join(projectRoot, 'app/src/main/res/xml');
             const valuesDirectory = path.join(projectRoot, 'app/src/main/res/values');
             const widgetsXmlPath = path.join(valuesDirectory, 'expo_widgets.xml');
@@ -58,6 +59,7 @@ const withAndroidWidgetFiles = (config, widgets) => {
                 fs.rmSync(widgetsXmlPath);
             }
             fs.writeFileSync(widgetsXmlPath, createWidgetStringsXml(widgets));
+            fs.writeFileSync(layoutRegistryConfigPath, createLayoutRegistryConfig(widgets));
             for (const widget of widgets) {
                 const providerPath = path.join(packageDirectory, `${(0, resourceNames_1.getProviderClassName)(widget)}.kt`);
                 if (fs.existsSync(providerPath)) {
@@ -73,6 +75,17 @@ const withAndroidWidgetFiles = (config, widgets) => {
             return config;
         },
     ]);
+};
+const createLayoutRegistryConfig = (widgets) => {
+    const config = {
+        widgets: widgets
+            .filter((widget) => widget.android?.initialLayout != null)
+            .map((widget) => ({
+            name: widget.name,
+            initialLayout: widget.android?.initialLayout,
+        })),
+    };
+    return `${JSON.stringify(config, null, 2)}\n`;
 };
 const createWidgetProviderKt = (androidPackage, widget) => {
     return `package ${androidPackage}
@@ -130,6 +143,9 @@ const escapeXmlSpecialChars = (value) => {
 const createWidgetStringsXml = (widgets) => {
     return `<?xml version="1.0" encoding="utf-8"?>
 <resources>
+  <string-array name="expo_widgets_names">
+${widgets.map((widget) => `    <item>${escapeXmlSpecialChars(widget.name)}</item>`).join('\n')}
+  </string-array>
 ${widgets
         .map((widget) => {
         return `  <string name="${(0, resourceNames_1.getWidgetDisplayNameResourceName)(widget)}">${escapeXmlSpecialChars(widget.displayName)}</string>
