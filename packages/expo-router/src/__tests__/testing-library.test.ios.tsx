@@ -140,9 +140,8 @@ describe('toHaveRouterState', () => {
     expect(message).toMatchSnapshot();
   });
 });
-
+// https://github.com/expo/expo/issues/46864
 describe('fake timers', () => {
-  // https://github.com/expo/expo/issues/46864
   it('preserves a system time mocked with jest.setSystemTime', () => {
     const mockNow = new Date('2025-06-17T12:00:00.000Z');
     jest.useFakeTimers();
@@ -152,8 +151,8 @@ describe('fake timers', () => {
 
     // `renderRouter` calls `jest.useFakeTimers()` internally to control navigator
     // animations. That must not reset the system time the user mocked.
-    expect(Date.now()).toBe(mockNow.getTime());
     expect(new Date().toISOString()).toBe(mockNow.toISOString());
+    expect(Date.now()).toBe(mockNow.getTime());
   });
 
   it('renders the mocked Date.now() in a component', () => {
@@ -162,9 +161,15 @@ describe('fake timers', () => {
     jest.setSystemTime(mockNow);
 
     renderRouter({
-      index: () => <Text testID="now">{Date.now()}</Text>,
+      index: () => (
+        <>
+          <Text testID="now-iso">{new Date().toISOString()}</Text>
+          <Text testID="now-num">{Date.now()}</Text>
+        </>
+      ),
     });
 
-    expect(screen.getByTestId('now')).toHaveTextContent(String(mockNow.getTime()));
+    expect(screen.getByTestId('now-iso')).toHaveTextContent(mockNow.toISOString());
+    expect(screen.getByTestId('now-num')).toHaveTextContent(String(mockNow.getTime()));
   });
 });
