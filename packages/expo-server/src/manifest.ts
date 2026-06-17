@@ -124,6 +124,7 @@ export type Route = RouteInfo<RegExp>;
 export interface GetStaticContentOptions {
   loader?: { data?: unknown; key: string };
   request?: Request;
+  hydrate?: boolean;
   assets?: AssetInfo;
 }
 
