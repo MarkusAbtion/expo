@@ -118,6 +118,7 @@ export interface GetStaticContentOptions {
         key: string;
     };
     request?: Request;
+    hydrate?: boolean;
     assets?: AssetInfo;
 }
 /**
