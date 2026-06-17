@@ -63,6 +63,37 @@ export declare function getLoaderDataScriptContents(data: Record<string, unknown
  */
 export declare function createLoaderDataScriptAsString(data: Record<string, unknown>): string;
 /**
+ * A CSS entry to inject: `css` is a bundled stylesheet href (rendered as preload + stylesheet
+ * links), `inline` is CSS source rendered as a `<style>` for dev HMR, `external` is a pre-rendered
+ * `<link>` injected verbatim.
+ */
+export type StaticContentCssAsset = {
+    type: 'css';
+    href: string;
+} | {
+    type: 'inline';
+    source: string;
+    hmrId?: string;
+} | {
+    type: 'external';
+    source: string;
+};
+export type StaticContentAssets = {
+    /** Injected in array order, so the caller controls cascade. */
+    css: StaticContentCssAsset[];
+    js: string[];
+    /** Public href of a favicon from `web.favicon`. */
+    favicon?: string;
+};
+/**
+ * Injects favicon, hydration flag, and CSS (in that order) before `</head>`, and deferred scripts
+ * before `</body>`.
+ */
+export declare function injectAssetsIntoHtml(html: string, { assets, hydrate }: {
+    assets?: StaticContentAssets;
+    hydrate?: boolean;
+}): string;
+/**
  * Extracts head tags and document attributes from a `react-helmet-async` helmet instance.
  *
  * `<head>` keys are serialized in document order: title, priority, meta, link, script, style.

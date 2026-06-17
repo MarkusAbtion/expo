@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import '@expo/metro-runtime';
+import { type StaticContentAssets } from '../utils/html';
 export type GetStaticContentOptions = {
     loader?: {
         data?: any;
@@ -12,13 +13,10 @@ export type GetStaticContentOptions = {
         key: string;
     };
     request?: Request;
-    /** Asset manifest for hydration bundles (JS/CSS). Used in SSR. */
-    assets?: {
-        css: string[];
-        js: string[];
-        /** Public href of a favicon generated from `web.favicon` in the app config. */
-        favicon?: string;
-    };
+    /** When true, injects the hydration flag so the client hydrates instead of full client-rendering. */
+    hydrate?: boolean;
+    /** Asset manifest for hydration bundles. */
+    assets?: StaticContentAssets;
 };
 export declare function getStaticContent(location: URL, options?: GetStaticContentOptions): Promise<string>;
 export { getStreamingContent, resolveMetadata } from '../server/renderStreamingContent';

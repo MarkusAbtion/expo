@@ -14,6 +14,7 @@ exports.getHydrationFlagScriptContents = getHydrationFlagScriptContents;
 exports.getHydrationFlagScriptAsString = getHydrationFlagScriptAsString;
 exports.getLoaderDataScriptContents = getLoaderDataScriptContents;
 exports.createLoaderDataScriptAsString = createLoaderDataScriptAsString;
+exports.injectAssetsIntoHtml = injectAssetsIntoHtml;
 exports.serializeHelmetToHtml = serializeHelmetToHtml;
 // See: https://github.com/urql-graphql/urql/blob/ad0276ae616b2b2f2cd01a527b4217ae35c3fa2d/packages/next-urql/src/htmlescape.ts#L10
 // License: https://github.com/urql-graphql/urql/blob/ad0276ae616b2b2f2cd01a527b4217ae35c3fa2d/LICENSE
@@ -112,6 +113,40 @@ function getLoaderDataScriptContents(data) {
  */
 function createLoaderDataScriptAsString(data) {
     return `<script id="expo-router-data">${getLoaderDataScriptContents(data)}</script>`;
+}
+/**
+ * Injects favicon, hydration flag, and CSS (in that order) before `</head>`, and deferred scripts
+ * before `</body>`.
+ */
+function injectAssetsIntoHtml(html, { assets, hydrate }) {
+    if (assets?.favicon) {
+        html = html.replace('</head>', `${createFaviconAsString(assets.favicon)}</head>`);
+    }
+    if (hydrate) {
+        html = html.replace('</head>', `${getHydrationFlagScriptAsString()}</head>`);
+    }
+    if (assets) {
+        const styleString = assets.css
+            .map((entry) => {
+            switch (entry.type) {
+                case 'css':
+                    return createInjectedCssAsString([entry.href]);
+                case 'inline':
+                    return `<style data-expo-css-hmr="${entry.hmrId}">${entry.source}\n</style>`;
+                case 'external':
+                    return entry.source;
+            }
+        })
+            .join('');
+        if (styleString) {
+            html = html.replace('</head>', `${styleString}</head>`);
+        }
+        const scripts = assets.js.map((src) => createInjectedScriptsAsString([src])).join('');
+        if (scripts) {
+            html = html.replace('</body>', `${scripts}\n</body>`);
+        }
+    }
+    return html;
 }
 const HELMET_HEAD_KEYS = ['title', 'priority', 'meta', 'link', 'script', 'style'];
 /**
